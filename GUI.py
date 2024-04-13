@@ -7,19 +7,34 @@ from WFC import Grid, Tile
 
 dpg.create_context()
 
+#Change the size of the window here
 width, height = 1920, 1080
 sideData: dict = {}
 
 def menu_loadImagesCB(sender, app_data, user_data):
+    '''
+    Callback for loading and creating a new set of tiles to
+    be used in the wave function collapse algorithm
+    '''
+
     images: list[list] = []
 
     def file_loadImagesCB(sender, app_data, user_data):
+        '''
+        Inner-Callback to load the images after the user has selected them
+        '''
+
         for path in app_data["selections"].values():
             width, height, channels, data = dpg.load_image(path)
             images.append([path, dpg.add_static_texture(parent="tex_register_main", width=width, height=height, default_value=data)])
         dpg.delete_item("file_loadImages")
 
         def menu_saveSidesCB(sender, app_data, user_data):
+            '''
+            Inner-Callback to save the tile data as a json file
+            for loading in to the algorithm
+            '''
+
             global sideData
 
             dpg.delete_item("window_setSides")
@@ -29,8 +44,16 @@ def menu_loadImagesCB(sender, app_data, user_data):
                 json.dump(sideData, outfile)
         
         def button_image_imageSelectCB(sender, app_data, user_data):
+            '''
+            Inner-Callback that prompts the user to enter the data for the selected tile
+            '''
 
             def button_setCB(sender, app_data, user_data):
+                '''
+                Inner-Callback for updating interal representation of tile data
+                with the data entered by the user
+                '''
+
                 global sideData
 
                 sideData[dpg.get_value("input_text_name")] = {
@@ -81,12 +104,30 @@ def menu_loadImagesCB(sender, app_data, user_data):
         dpg.add_file_extension(".png")
 
 def menu_loadDataCB(sender, app_data, user_data):
+    '''
+    Callback that will handle the loading of the json file
+    which holds the tile data
+    '''
 
     def file_loadDataCB(sender, app_data, user_data):
+        '''
+        Inner-Callback that gets called once the user selects a file
+        '''
+
 
         def button_rotateCB(sender, app_data, user_data):
+            '''
+            Inner-Callback for prompting the user on how many rotations a
+            tile should have
+            '''
+
 
             def button_setRotationsCB(sender, app_data, user_data):
+                '''
+                Inner-Callback that does the rotations on a tile based on
+                the number specified by the user
+                '''
+
                 rawImage, PILImage, image = user_data
                 for i in range(1, dpg.get_value("input_int_rotationAmount")):
                     data = np.asfarray(PILImage.rotate(-90 * i), dtype='f')
@@ -136,18 +177,27 @@ def menu_loadDataCB(sender, app_data, user_data):
         dpg.add_file_extension(".json")
 
 def menu_startSettingsCB(sender, app_data, user_data):
+    '''
+    Callback that shows the settings for running the algorithm
+    '''
+    
     dpg.delete_item("window_settings")
     with dpg.window(label="Settings", autosize=True, tag="window_settings"):
         dpg.add_checkbox(label="Show full process (Warning Possible Flashing Lights)", default_value=False, tag="checkbox_showAll")
         dpg.add_checkbox(label="Animate", default_value=True, tag="checkbox_animate")
 
 def menu_startCB(sender, app_data, user_data):
+    '''Callback that starts the algorthim based on the settings from the user'''
+
     global sideData, grid, i, cell
 
     grid = Grid(width, height, 50, Tile.ParseTiles(sideData))
     i = 0
 
     def button_manualCB(sender, app_data, user_data):
+        '''
+        Inner-Callback that handles when a user manually collapses the next cell
+        '''
         global grid, cell
 
         dpg.delete_item("group_manual", children_only=True)
@@ -166,6 +216,10 @@ def menu_startCB(sender, app_data, user_data):
             dpg.add_image_button(parent="group_manual", texture_tag=state.tag, width=50, height=50, callback=button_manualCB, user_data=state, tag=dpg.generate_uuid())
 
     def button_stepCB(sender, app_data, user_data):
+        '''
+        Inner-Callback that steps the algorithm
+        '''
+
         global grid, cell
 
         dpg.delete_item("group_manual", children_only=True)
