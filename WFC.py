@@ -63,6 +63,7 @@ class Grid:
         self.grid: list[Cell] = []
         self.tiles = tiles
 
+        #Create and populate the grid with blank tiles
         for x in range(0, width + 1, step):
              for y in range(0, height + 1, step):
                   self.grid.append(Cell([x,y], Tile({}, {}, {}, {}, "Unknown"), possibleStates=tiles))
@@ -98,11 +99,16 @@ class WaveFunctionCollapse:
         Returns:
             Cell | bool: Returns a cell if the collapse was successful or False otherwise
         """
+        #The user hasn't specified a tile so pick one according to the
+        #Wave Function Collapse Algorithm
         if cell == None:
             toCollapse = WaveFunctionCollapse.Select(grid)
+        #The user specified a tile
         else: toCollapse = cell
+        #If there is no possible states then the algorithm has gotten stuck and needs to restart
         if len(toCollapse.possibleStates) == 0:
             return False
+        #Pick a random tile out of the possible ones
         toCollapse.state = random.choice(toCollapse.possibleStates)
         toCollapse.possibleStates = [toCollapse.state]
         return toCollapse
@@ -138,12 +144,15 @@ class WaveFunctionCollapse:
             grid (Grid): The grid that will be propagated on
             cell (Cell): The cell to propagate
         """
+
+        #Get the positions of the cells around the current cell
         upPos = [cell.position[0], cell.position[1] - grid.step]
         downPos = [cell.position[0], cell.position[1] + grid.step]
         leftPos = [cell.position[0] - grid.step, cell.position[1]]
         rightPos = [cell.position[0] + grid.step, cell.position[1]]
         
 
+        #Get the cells at the above positions if they are not off the edge
         if(not WaveFunctionCollapse.__EdgeCheck(grid, "up", cell)):
             upCell = [x for x in grid.grid if x.position == upPos][0]
         if(not WaveFunctionCollapse.__EdgeCheck(grid, "down", cell)):
@@ -153,6 +162,7 @@ class WaveFunctionCollapse:
         if(not WaveFunctionCollapse.__EdgeCheck(grid, "right", cell)):
             rightCell = [x for x in grid.grid if x.position == rightPos][0]
 
+        #Remove all impossible sets of tiles that do not match the given cell's state
         toRemove = []
         if(not WaveFunctionCollapse.__EdgeCheck(grid, "up", cell)):
             for state in upCell.possibleStates:
